@@ -8,6 +8,7 @@ import (
 
 func main() {
 	router := Setup()
+	router.Run("localhost:8080")
 }
 
 func Setup() *gin.Engine {
@@ -18,7 +19,7 @@ func Setup() *gin.Engine {
 	router := gin.Default()
 	router.GET("/lib?=:package", sendLib)
 	router.GET("/dll?=:package", sendDll)
-	router.GET("/src?=:package", sendSrc)
+	router.POST("/src?=:package", sendSrc)
 	router.PUT("/packages?=:package", upload)
 	return router
 }

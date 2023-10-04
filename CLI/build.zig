@@ -1,5 +1,4 @@
 const std = @import("std");
-
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -24,6 +23,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const capsule = b.createModule(.{
+        .source_file = .{ .path = "./CapsuleModule/module.zig" },
+    });
+    exe.addModule("capsule", capsule);
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
@@ -33,7 +36,6 @@ pub fn build(b: *std.Build) void {
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.
     const run_cmd = b.addRunArtifact(exe);
-
     // By making the run step depend on the install step, it will be run from the
     // installation directory rather than directly from within the cache directory.
     // This is not necessary, however, if the application depends on other installed
