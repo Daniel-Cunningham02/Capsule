@@ -1,10 +1,11 @@
 const std = @import("std");
-const http = std.http;
 const messages = @import("./messages.zig");
-const mem = std.mem;
 const settings = @import("./settings.zig");
-const print = std.debug.print;
 const capsule = @import("capsule");
+const types = @import("./types.zig");
+const http = std.http;
+const mem = std.mem;
+const print = std.debug.print;
 const e = capsule.Error;
 
 pub fn handle_commands(args: *const [][:0]u8) !void {
@@ -55,7 +56,9 @@ fn createFolder(folder_name: *[]u8, charArray: *std.ArrayList(u8)) !void {
 }
 
 fn handle_get(args: *const [][:0]u8) !void {
-    if (args.len > 2 and mem.eql(u8, args.*[2], "-")) {
+    const dash: u8 = '-';
+    const slice: u8 = args.*[2][0];
+    if (args.len > 2 and slice == dash) {
         try handle_flags(args);
     } else if (args.len > 2) {
         try download_src(&args.*[2]);
@@ -85,9 +88,10 @@ fn download_src(package: *[:0]u8) !void {
 }
 
 fn publish(args: *const [][:0]u8) !void {
-    print("{s}", .{args.*[3]});
+    print("{s}", .{args});
 }
 
 fn handle_flags(args: *const [][:0]u8) !void {
-    print("{s}", .{args.*[3]});
+    const flags = try types.get_command_flags(&args.*[2]);
+    print("{}", .{flags});
 }
