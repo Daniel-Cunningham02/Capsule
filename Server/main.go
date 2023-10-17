@@ -17,10 +17,10 @@ func Setup() *gin.Engine {
 		os.Exit(1)
 	}
 	router := gin.Default()
-	router.GET("/lib?=:package", sendLib)
-	router.GET("/dll?=:package", sendDll)
-	router.POST("/src?=:package", sendSrc)
-	router.PUT("/packages?=:package", upload)
+	router.GET("/lib/:package", sendLib)
+	router.GET("/dll/:package", sendDll)
+	router.GET("/src/:package", sendSrc)
+	router.PUT("/packages/:package", upload)
 	return router
 }
 
