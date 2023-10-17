@@ -86,16 +86,55 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     const uri = try std.Uri.parse(path);
     var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
     defer req.deinit();
+    try req.start();
+    try req.wait();
 
     return;
 }
 
 fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
-    print("{s} {} {} {}", .{ package.*, verbose, ofp, hidden });
+    // Making Allocator
+    var mallocator = std.heap.page_allocator;
+    print("{} {} {}\n", .{ verbose, ofp, hidden });
+
+    // Making client
+    var client: http.Client = .{ .allocator = mallocator };
+
+    //creating path and Uri
+    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
+    const uri = try std.Uri.parse(path);
+    defer mallocator.free(path);
+
+    // Creating and sending request
+    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
+    defer req.deinit();
+    try req.start();
+    try req.wait();
+
+    return;
 }
 
 fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
     print("Downloading dll {s} {} {} {}", .{ package.*, verbose, ofp, hidden });
+    // Making Allocator
+    var mallocator = std.heap.page_allocator;
+    print("{} {} {}\n", .{ verbose, ofp, hidden });
+
+    // Making client
+    var client: http.Client = .{ .allocator = mallocator };
+
+    //creating path and Uri
+    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
+    const uri = try std.Uri.parse(path);
+    defer mallocator.free(path);
+
+    // Creating and sending request
+    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
+    defer req.deinit();
+    try req.start();
+    try req.wait();
+
+    return;
 }
 
 fn publish(args: *const [][:0]u8) !void {
@@ -131,4 +170,8 @@ fn handle_flags(args: *const [][:0]u8) !void {
         try download_dll(&args.*[counter], flags.verbose, ofp, flags.hidden);
         try download_src(&args.*[counter], flags.verbose, ofp, flags.hidden);
     }
+}
+
+fn writeToFile(str: *[:0]u8, file_name: *[:0]u8) !void {
+    print("{s} \n {s}", .{ str, file_name });
 }
