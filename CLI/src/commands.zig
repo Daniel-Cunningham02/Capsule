@@ -63,15 +63,15 @@ fn handle_get(args: *const [][:0]u8) !void {
             try handle_flags(args);
             return;
         }
-        try download_src(&args.*[2]);
+        try download_src(&args.*[2], false, undefined, false);
     } else {
         print("{s}", .{messages.get_usage_help});
     }
 }
 
-fn download_src(package: *[:0]u8) !void {
+fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
     var mallocator = std.heap.GeneralPurposeAllocator(.{}){};
-
+    print("{} {} {}\n", .{ verbose, ofp, hidden });
     defer {
         var status = mallocator.deinit();
 
@@ -80,22 +80,55 @@ fn download_src(package: *[:0]u8) !void {
         }
     }
     const allocator = mallocator.allocator();
-    //var client: http.Client = .{ .allocator = allocator };
+    var client: http.Client = .{ .allocator = allocator };
     const path = try std.fmt.allocPrint(allocator, "{s}/src/{s}", .{ settings.address, package.* });
     defer allocator.free(path);
-    //const uri = try std.Uri.parse(path);
-    print("{s}", .{path});
-    //var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
-    //defer req.deinit();
+    const uri = try std.Uri.parse(path);
+    var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
+    defer req.deinit();
 
     return;
+}
+
+fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+    print("{s} {} {} {}", .{ package.*, verbose, ofp, hidden });
+}
+
+fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+    print("Downloading dll {s} {} {} {}", .{ package.*, verbose, ofp, hidden });
 }
 
 fn publish(args: *const [][:0]u8) !void {
     print("{s}", .{args});
 }
 
+fn handle_output_name(ofp: types.output_flag_param) !void {
+    print("{}", .{ofp});
+    // return [:0]u8
+}
+
 fn handle_flags(args: *const [][:0]u8) !void {
+    var counter: u32 = 3;
     const flags = try types.get_command_flags(&args.*[2]);
-    print("{}", .{flags});
+    var ofp: types.output_flag_param = undefined;
+
+    //checking output flag and setting a struct correctly
+    if (flags.output) {
+        ofp = types.output_flag_param{ .output = true, .output_file = args.*[3] };
+        counter += 1;
+    } else {
+        ofp = types.output_flag_param{ .output = false, .output_file = undefined };
+    }
+
+    //checking for type of request.
+    if (flags.dll == true and flags.lib == false) {
+        try download_dll(&args.*[counter], flags.verbose, ofp, flags.hidden);
+    } else if (flags.dll == false and flags.lib == true) {
+        try download_lib(&args.*[counter], flags.verbose, ofp, flags.hidden);
+    } else if (flags.dll == false and flags.lib == false) {
+        try download_src(&args.*[counter], flags.verbose, ofp, flags.hidden);
+    } else {
+        try download_dll(&args.*[counter], flags.verbose, ofp, flags.hidden);
+        try download_src(&args.*[counter], flags.verbose, ofp, flags.hidden);
+    }
 }

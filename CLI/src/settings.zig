@@ -1,1 +1,1 @@
-pub var address = "https://localhost:8080";
+pub const address = "https://localhost:8080";
