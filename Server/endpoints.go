@@ -10,25 +10,25 @@ import (
 
 func sendLib(context *gin.Context) {
 	pkg := context.Param("package")
-	pkgPath := filepath.Join("./packages/lib", filepath.Join(pkg, ".lib"))
+	pkgPath := filepath.Join("./packages/lib/", (pkg + ".lib"))
 	fileInfo, err := os.Stat(pkgPath)
 	if err != nil || fileInfo == nil {
 		context.String(http.StatusBadRequest, "Error occured\nStatic library not found\n")
 		return
 	}
-	context.File(pkgPath)
+	context.FileAttachment(pkgPath, (pkg + ".lib"))
 	context.Status(http.StatusAccepted)
 }
 
 func sendDll(context *gin.Context) {
 	pkg := context.Param("package")
-	pkgPath := filepath.Join("./packages/dll", filepath.Join(pkg, ".dll"))
+	pkgPath := filepath.Join("./packages/dll/", (pkg + ".dll"))
 	fileInfo, err := os.Stat(pkgPath)
 	if err != nil || fileInfo == nil {
 		context.String(http.StatusOK, "Error occured\nDynamic library not found\n")
 		return
 	}
-	context.File(pkgPath)
+	context.FileAttachment(pkgPath, (pkg + ".dll"))
 	context.Status(http.StatusAccepted)
 }
 
@@ -41,7 +41,6 @@ func sendSrc(context *gin.Context) {
 		return
 	}
 	context.File(pkgPath)
-	context.Status(http.StatusAccepted)
 }
 
 func upload(context *gin.Context) {

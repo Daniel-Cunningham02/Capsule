@@ -57,10 +57,12 @@ fn createFolder(folder_name: *[]u8, charArray: *std.ArrayList(u8)) !void {
 
 fn handle_get(args: *const [][:0]u8) !void {
     const dash: u8 = '-';
-    const slice: u8 = args.*[2][0];
-    if (args.len > 2 and slice == dash) {
-        try handle_flags(args);
-    } else if (args.len > 2) {
+    if (args.len > 2) {
+        const slice: u8 = args.*[2][0];
+        if (slice == dash) {
+            try handle_flags(args);
+            return;
+        }
         try download_src(&args.*[2]);
     } else {
         print("{s}", .{messages.get_usage_help});
@@ -78,13 +80,15 @@ fn download_src(package: *[:0]u8) !void {
         }
     }
     const allocator = mallocator.allocator();
-    var client: http.Client = .{ .allocator = allocator };
+    //var client: http.Client = .{ .allocator = allocator };
+    const path = try std.fmt.allocPrint(allocator, "{s}/src/{s}", .{ settings.address, package.* });
+    defer allocator.free(path);
+    //const uri = try std.Uri.parse(path);
+    print("{s}", .{path});
+    //var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
+    //defer req.deinit();
 
-    var buffer = [_]u8{undefined} ** 100;
-    const path = try std.fmt.bufPrint(&buffer, "/src?={s}", .{package.*});
-    const uri = try std.Uri.parse(path);
-    var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
-    defer req.deinit();
+    return;
 }
 
 fn publish(args: *const [][:0]u8) !void {
