@@ -70,25 +70,24 @@ fn handle_get(args: *const [][:0]u8) !void {
 }
 
 fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
-    var mallocator = std.heap.GeneralPurposeAllocator(.{}){};
+    var mallocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
-    defer {
-        var status = mallocator.deinit();
 
-        if (status == .leak) {
-            @panic("Memory Leak");
-        }
-    }
-    const allocator = mallocator.allocator();
-    var client: http.Client = .{ .allocator = allocator };
-    const path = try std.fmt.allocPrint(allocator, "{s}/src/{s}", .{ settings.address, package.* });
-    defer allocator.free(path);
+    var client: http.Client = .{ .allocator = mallocator };
+    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
+    defer mallocator.free(path);
     const uri = try std.Uri.parse(path);
-    var req = try client.request(.GET, uri, .{ .allocator = allocator }, .{});
+    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
     defer req.deinit();
     try req.start();
     try req.wait();
 
+    // Reading response to buffer and writing to file
+    var buffer = std.ArrayList(u8).init(mallocator);
+    try buffer.resize(100000);
+    var readSize = try req.read(buffer.items);
+    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.zig", .{package.*}), std.fs.File.CreateFlags{});
+    _ = try file.write(buffer.items[0..readSize]);
     return;
 }
 
@@ -101,7 +100,7 @@ fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     var client: http.Client = .{ .allocator = mallocator };
 
     //creating path and Uri
-    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
+    const path = try std.fmt.allocPrint(mallocator, "{s}/lib/{s}", .{ settings.address, package.* });
     const uri = try std.Uri.parse(path);
     defer mallocator.free(path);
 
@@ -111,11 +110,17 @@ fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     try req.start();
     try req.wait();
 
+    // Reading response to buffer and writing to file
+    var buffer = std.ArrayList(u8).init(mallocator);
+    try buffer.resize(100000);
+    var readSize = try req.read(buffer.items);
+    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.lib", .{package.*}), std.fs.File.CreateFlags{});
+    _ = try file.write(buffer.items[0..readSize]);
     return;
 }
 
 fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
-    print("Downloading dll {s} {} {} {}", .{ package.*, verbose, ofp, hidden });
+    print("Downloading dll\n {s} {} {} {}]\n", .{ package.*, verbose, ofp, hidden });
     // Making Allocator
     var mallocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
@@ -124,7 +129,7 @@ fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     var client: http.Client = .{ .allocator = mallocator };
 
     //creating path and Uri
-    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
+    const path = try std.fmt.allocPrint(mallocator, "{s}/dll/{s}", .{ settings.address, package.* });
     const uri = try std.Uri.parse(path);
     defer mallocator.free(path);
 
@@ -134,6 +139,11 @@ fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     try req.start();
     try req.wait();
 
+    var buffer = std.ArrayList(u8).init(mallocator);
+    try buffer.resize(100000);
+    var readSize = try req.read(buffer.items);
+    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.dll", .{package.*}), std.fs.File.CreateFlags{});
+    _ = try file.write(buffer.items[0..readSize]);
     return;
 }
 

@@ -22,7 +22,6 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-
     const capsule = b.createModule(.{
         .source_file = .{ .path = "./CapsuleModule/module.zig" },
     });

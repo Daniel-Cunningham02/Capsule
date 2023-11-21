@@ -28,8 +28,8 @@ func sendDll(context *gin.Context) {
 		context.String(http.StatusOK, "Error occured\nDynamic library not found\n")
 		return
 	}
+	context.String(http.StatusAccepted, "9")
 	context.FileAttachment(pkgPath, (pkg + ".dll"))
-	context.Status(http.StatusAccepted)
 }
 
 func sendSrc(context *gin.Context) {
