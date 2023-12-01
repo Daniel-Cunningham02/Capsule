@@ -3,7 +3,7 @@ const mem = std.mem;
 
 // verbose = explains steps, output = outputs to a specific folder, hidden = hides the dependencies in a temp
 const general_flag_str = [_]u8{ 'v', 'o', 'h', 'd', 'l' };
-
+// Pub structs
 pub const output_flag_param = struct {
     output: bool,
     output_file: [:0]u8,
@@ -17,6 +17,12 @@ pub const general_flags = struct {
     lib: bool,
 };
 
+pub const dir = struct {
+    files: [][:0]u8,
+    filenames: [][:0]u8,
+};
+
+// Pub functions below here
 pub fn get_command_flags(flag_str: *[:0]u8) !general_flags {
     var slice = flag_str.*[1..flag_str.len :0];
     var flags: [general_flag_str.len]bool = undefined;
