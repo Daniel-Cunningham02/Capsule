@@ -22,6 +22,11 @@ pub const dir = struct {
     filenames: [][:0]u8,
 };
 
+pub const selectionStruct = struct {
+    entry: []const u8,
+    selected: bool,
+};
+
 // Pub functions below here
 pub fn get_command_flags(flag_str: *[:0]u8) !general_flags {
     var slice = flag_str.*[1..flag_str.len :0];

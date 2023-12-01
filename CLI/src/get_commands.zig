@@ -49,21 +49,26 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     // Reading response to buffer and writing to file
     var buffer = std.ArrayList(u8).init(mallocator);
     defer buffer.deinit();
-    try buffer.resize(100000);
+    try buffer.resize(1000000);
     var readSize = try req.read(buffer.items);
-    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.zig", .{package.*}), std.fs.File.CreateFlags{});
-    _ = try file.write(buffer.items[0..readSize]);
     var parsed_dir = try std.json.parseFromSlice(types.dir, mallocator, buffer.items[0..readSize], .{});
 
     var decoder = std.base64.Base64Decoder.init(std.fs.base64_alphabet, '=');
     var decoded_buffer = std.ArrayList(u8).init(mallocator);
     defer decoded_buffer.deinit();
-    try decoded_buffer.resize(try decoder.calcSizeForSlice(parsed_dir.value.files[0]));
-    try decoder.decode(decoded_buffer.items, parsed_dir.value.files[0][0 .. parsed_dir.value.files[0].len - 1]);
-    // print("{s}", .{decoded_buffer.items[0..]});
 
-    // print("{any}", .{parsed_dir.value.files});
-
+    try std.fs.cwd().makeDir(package.*);
+    var dir = try std.fs.cwd().openDir(package.*, std.fs.Dir.OpenDirOptions{});
+    for (parsed_dir.value.files, 0..) |string, i| {
+        try decoded_buffer.resize(try decoder.calcSizeForSlice(string));
+        try decoder.decode(decoded_buffer.items, string);
+        var name = parsed_dir.value.filenames[i];
+        var file = try dir.createFile(try std.fmt.allocPrint(mallocator, "./{s}", .{name}), std.fs.File.CreateFlags{});
+        _ = try file.write(decoded_buffer.items);
+        file.close();
+        decoded_buffer.clearAndFree();
+    }
+    dir.close();
     return;
 }
 
