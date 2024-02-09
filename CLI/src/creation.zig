@@ -31,7 +31,7 @@ fn selectFiles() !void { // Return types.dir
     var cwd = try std.fs.cwd().openIterableDir(".", std.fs.Dir.OpenDirOptions{});
 
     var allocator = std.heap.page_allocator;
-    var arr = std.ArrayList([]types.selectionStruct).init(allocator);
+    //var arr = std.ArrayList([]types.selectionStruct).init(allocator);
     var walker = try cwd.walk(allocator);
     defer walker.deinit();
     // TODO: Get the contents from the files into the array and setup selection menu.
