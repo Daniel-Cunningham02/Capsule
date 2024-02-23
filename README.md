@@ -20,3 +20,7 @@ The README will be updated to reflect software improvements and developments
 - [ ] CLI has some implementation of a developer portal to decouple the user from the developer. This allows for a more strenuous, robust security system.
 ### Website
 The Website is my last priority. I'm going to try to focus on what is said above. My requirements for the website will be added later.
+
+### Currently working on
+* Working on getting easy package initialization. Work to do in metadata.
+* Working on publish command, flags, and allowing the server to accept new packages

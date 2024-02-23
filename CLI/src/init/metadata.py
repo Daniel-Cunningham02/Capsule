@@ -1,4 +1,6 @@
 
+# TODO: Add name, desc, and dependency checking
+
 class PkgMetaData:
     def __init__(self, files, dependencies=[]):
         self.files = files
