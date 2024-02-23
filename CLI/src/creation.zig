@@ -45,7 +45,10 @@ fn cloneString(stringToClone: []const u8) ![]const u8 {
     return stringToClone;
 }
 
-pub fn newCapsuleFile(args: *const [][:0]u8) !void {}
+pub fn newCapsuleFile(args: *const [][:0]u8) !void {
+    var stdout = std.io.getStdOut().writer();
+    try stdout.print("{s}", .{args.*});
+}
 
 fn createFolder(folder_name: *[]u8, charArray: *std.ArrayList(u8)) !void {
     try std.fs.cwd().makeDir(folder_name.*);

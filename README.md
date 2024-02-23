@@ -32,4 +32,5 @@ The Website is my last priority. I'm going to try to focus on what is said above
 * Working on getting easy package initialization. Work to do in metadata.
   * Redoing package creation. See Pkg Creation on tablet
     * Must redo Python Exe, creation.zig, and commands.zig
+    * NEED TO MOVE src/init/createCapsule.sh into python
 * Working on publish command, flags, and allowing the server to accept new packages

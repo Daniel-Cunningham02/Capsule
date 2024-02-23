@@ -1,5 +1,4 @@
 const std = @import("std");
-const capsule = @import("capsule");
 const messages = @import("./messages.zig");
 const commands = @import("./commands.zig");
 const print = std.debug.print;

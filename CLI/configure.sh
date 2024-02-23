@@ -1,4 +1,5 @@
 #!/bin/bash
+
 zig build
 
 cd ./src/init
