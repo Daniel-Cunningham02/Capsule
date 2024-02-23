@@ -17,7 +17,8 @@ pub fn handle_commands(args: *const [][:0]u8) !void {
     } else if (mem.eql(u8, args.*[1], "help")) {
         print("{s}", .{messages.help_message});
     } else if (mem.eql(u8, args.*[1], "new")) {
-        try c.setup(args);
+        // Need to parse what type of Package it is
+        try c.newCapsuleFile(args);
     } else if (mem.eql(u8, args.*[1], "init")) {
         try c.initCapsuleFile();
     } else {}

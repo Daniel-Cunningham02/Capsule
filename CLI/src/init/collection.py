@@ -38,4 +38,4 @@ class Collection:
     # Calls display on every file in fileList
     def display(self, term):
         for i in self.fileList:
-            i.display(term)
+            i.display(term)   

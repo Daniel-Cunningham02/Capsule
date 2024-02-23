@@ -21,7 +21,7 @@ class InitInterface:
             print(self.term.move_xy(0, y - self.length - 1))
             self.currentPosY = 0
     
-    # Move Cursor ip
+    # Move Cursor up
     def up(self):
         if self.currentPosY > 0:
             self.currentPosY -= 1

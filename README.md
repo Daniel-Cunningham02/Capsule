@@ -4,6 +4,13 @@ Capsule - Alternative Zig package manager
 ## Plan
 As of now, I am behind my current plan. I am working on catching up.\\
 The README will be updated to reflect software improvements and developments
+
+## Dependencies
+* Python
+  * Blessed API
+* Zig
+* Go
+
 ### Server
 - [X] Basic server software setup
 - [ ] Basic server security(TLS) is in place
@@ -23,4 +30,6 @@ The Website is my last priority. I'm going to try to focus on what is said above
 
 ### Currently working on
 * Working on getting easy package initialization. Work to do in metadata.
+  * Redoing package creation. See Pkg Creation on tablet
+    * Must redo Python Exe, creation.zig, and commands.zig
 * Working on publish command, flags, and allowing the server to accept new packages

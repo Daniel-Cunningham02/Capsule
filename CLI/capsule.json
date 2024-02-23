@@ -1,8 +1,0 @@
-{
-    "name": "Hello",
-    "file": "build.zig",
-    "dir": ["src !main.zig", "inc"],
-    "version": "1.0.0",
-    "desc": "",
-    "dep": []
-}

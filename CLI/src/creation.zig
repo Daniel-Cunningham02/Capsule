@@ -45,29 +45,7 @@ fn cloneString(stringToClone: []const u8) ![]const u8 {
     return stringToClone;
 }
 
-pub fn setup(args: *const [][:0]u8) !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        var status = gpa.deinit();
-
-        if (status == .leak) {
-            @panic("Memory Leak");
-        }
-    }
-    const allocator = gpa.allocator();
-
-    var charArray = std.ArrayList(u8).init(allocator);
-    defer charArray.deinit();
-
-    if (args.len > 2) {
-        if (!mem.eql(u8, args.*[2], "-")) {
-            for (args.*[2]) |c| {
-                try charArray.append(c);
-            }
-        }
-    }
-    try createFolder(&charArray.items, &charArray);
-}
+pub fn newCapsuleFile(args: *const [][:0]u8) !void {}
 
 fn createFolder(folder_name: *[]u8, charArray: *std.ArrayList(u8)) !void {
     try std.fs.cwd().makeDir(folder_name.*);
