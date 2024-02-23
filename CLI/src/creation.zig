@@ -27,14 +27,16 @@ pub fn initCapsuleFile() !void {
 }
 
 fn selectFiles() !void { // Return types.dir
-    // var stdout = std.io.getStdOut().writer();
-    var cwd = try std.fs.cwd().openIterableDir(".", std.fs.Dir.OpenDirOptions{});
+    var cwd = try std.fs.cwd().openIterableDir(".", .{});
 
     var allocator = std.heap.page_allocator;
-    //var arr = std.ArrayList([]types.selectionStruct).init(allocator);
-    var walker = try cwd.walk(allocator);
-    defer walker.deinit();
-    // TODO: Get the contents from the files into the array and setup selection menu.
+    var arr = std.ArrayList(types.selectionStruct).init(allocator);
+
+    var iterator = cwd.iterate();
+    while (try iterator.next()) |ientry| {
+        try arr.append(types.selectionStruct{ .entry = ientry.name, .selected = false });
+    }
+    // TODO: setup selection menu.
 }
 
 fn cloneString(stringToClone: []const u8) ![]const u8 {
