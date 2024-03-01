@@ -1,7 +1,6 @@
 from metadata import *
 import json
-import subprocess
-import shlex
+from createCapsule import *
 
 def makeJSON(metadata : PkgMetaData):
     return json.dumps(metadata, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -63,6 +62,6 @@ def generatePKG(files : list, name : str, desc : str, term):
             currentPos = moveTermDown(currentPos, length, term)
         inp = term.inkey(timeout=10)
     json = getJSON(files, name, desc)
-    subprocess.run(shlex.split('/bin/bash createCapsule.sh {}'.format(name)))
+    createCapsule(name)
     filepath = './{}/src'.format(name)
     # Write the files selected to the filepath

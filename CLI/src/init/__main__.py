@@ -1,6 +1,6 @@
 from interface import *
 from blessed import Terminal
-from generateJSON import *
+from generatePKG import *
 from enum import Enum
 
 class Result(Enum):
