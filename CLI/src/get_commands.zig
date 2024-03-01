@@ -1,8 +1,7 @@
 const std = @import("std");
 const messages = @import("./messages.zig");
 const settings = @import("./settings.zig");
-const types = @import("./types.zig");
-const util = @import("./utility.zig");
+const FlagsI = @import("./flags.zig");
 const http = std.http;
 const print = std.debug.print;
 
@@ -11,7 +10,7 @@ pub fn handle_get(args: *const [][:0]u8) !void {
     if (args.len > 2) {
         const slice: u8 = args.*[2][0];
         if (slice == dash) {
-            try util.handle_flags(args);
+            try FlagsI.handle_flags(args);
             return;
         }
         try download_src(&args.*[2], false, undefined, false);
@@ -20,7 +19,7 @@ pub fn handle_get(args: *const [][:0]u8) !void {
     }
 }
 
-pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: types.general_flags, ofp: types.output_flag_param) !void {
+pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: FlagsI.general_flags, ofp: FlagsI.output_flag_param) !void {
     if (flags.dll == true and flags.lib == false) {
         try download_dll(&args.*[counter], flags.verbose, ofp, flags.hidden);
     } else if (flags.dll == false and flags.lib == true) {
@@ -33,7 +32,7 @@ pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: types.general_fl
     }
 }
 
-fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+fn download_src(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
     var mallocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
 
@@ -51,7 +50,7 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     defer buffer.deinit();
     try buffer.resize(1000000);
     var readSize = try req.read(buffer.items);
-    var parsed_dir = try std.json.parseFromSlice(types.dir, mallocator, buffer.items[0..readSize], .{});
+    var parsed_dir = try std.json.parseFromSlice(FlagsI.dir, mallocator, buffer.items[0..readSize], .{});
 
     var decoder = std.base64.Base64Decoder.init(std.fs.base64_alphabet, '=');
     var decoded_buffer = std.ArrayList(u8).init(mallocator);
@@ -72,7 +71,7 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     return;
 }
 
-fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+fn download_lib(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
     // Making Allocator
     var mallocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
@@ -100,7 +99,7 @@ fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
     return;
 }
 
-fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+fn download_dll(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
     // Making Allocator
     var mallocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
