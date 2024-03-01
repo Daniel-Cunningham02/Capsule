@@ -57,10 +57,10 @@ def init(interface: InitInterface):
             if inp.name == u'KEY_ENTER':
                 if interface.currentPosY == interface.length:
                     generatePKG(
+                        interface.term,
                         interface.collection.getSelectedFiles(),
                         name,
-                        desc,
-                        interface.term
+                        desc
                     )
                     inp = 'q'
                     break                  

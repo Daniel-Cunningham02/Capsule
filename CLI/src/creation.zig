@@ -3,40 +3,18 @@ const capsule = @import("capsule");
 const messages = @import("messages.zig");
 const util = @import("utility.zig");
 const types = @import("types.zig");
+const process = std.ChildProcess;
 const e = capsule.Error;
 const mem = std.mem;
 
 const CapsuleObject = struct { name: []u8, file: []u8, dir: []u8, version: []u8, desc: []u8, dependencies: []u8 };
 
 pub fn initCapsuleFile() !void {
-    var allocator = std.heap.page_allocator;
-    var buffer = std.ArrayList(u8).init(allocator);
-    try buffer.resize(100);
-    defer buffer.deinit();
-
-    var capsuleObj = CapsuleObject{ .name = "", .file = "", .dir = "", .version = "", .desc = "", .dependencies = "" };
-
-    var stdout = std.io.getStdOut().writer();
-
-    try stdout.print("{s} ", .{messages.name_prompt});
-    try util.readInputInto(buffer.items, &capsuleObj.name, '\n');
-
-    try stdout.print("{s} \n", .{messages.file_prompt});
-    try selectFiles();
-    buffer.clearAndFree();
-}
-
-fn selectFiles() !void { // Return types.dir
-    var cwd = try std.fs.cwd().openIterableDir(".", .{});
-
-    var allocator = std.heap.page_allocator;
-    var arr = std.ArrayList(types.selectionStruct).init(allocator);
-
-    var iterator = cwd.iterate();
-    while (try iterator.next()) |ientry| {
-        try arr.append(types.selectionStruct{ .entry = ientry.name, .selected = false });
-    }
-    // TODO: setup selection menu.
+    const result = try process.exec(.{
+        .allocator = std.heap.page_allocator,
+        .argv = &[_][]const u8{ "python3", "initialize.zip" },
+    });
+    try std.io.getStdOut().writer().print("{s}", .{result.stderr});
 }
 
 fn cloneString(stringToClone: []const u8) ![]const u8 {

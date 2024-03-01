@@ -3,8 +3,10 @@ import subprocess
 import shlex
 
 def createCapsule(name):
-    path = os.path.join("./name", name)
-    os.mkdir(path)
-    subprocess.run(shlex.split("cd {}".format(path)))
-    subprocess.run(shlex.split("zig init-exe"))
-    subprocess.run(shlex.split("cd ../"))
+    path = os.path.join("./", name)
+    if os.path.exists(path):
+        print("[CREATION ERROR]: Directory already exists!")
+    else:
+        os.mkdir(path)
+        os.system("cd {}".format(path))
+        os.system("zig init-exe")

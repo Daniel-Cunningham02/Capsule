@@ -2,6 +2,14 @@ from metadata import *
 import json
 from createCapsule import *
 
+
+# CapsuleObject:
+#    Name: u8
+#    files: []u8
+#    version: []u8
+#    desc: []u8
+#    dependencies: []u8
+
 def makeJSON(metadata : PkgMetaData):
     return json.dumps(metadata, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
@@ -16,29 +24,7 @@ def getJSON(files : list, name : str, desc : str):
     string = makeJSON(metadata)
     return string
 
-def moveTermUp(pos, length, term):
-    if pos > 0:
-        pos -= 1
-        y, x = term.get_location()
-        print(term.move_xy(0, y - 2))
-    elif pos == 0:
-        y, x = term.get_location()
-        print(term.move_xy(0, y + length - 2))
-        pos = length
-    return pos
-
-def moveTermDown(pos, length, term):
-    if pos < length:
-        pos += 1
-        y, x = term.get_location()
-        print(term.move_xy(0, y))
-    elif pos == length:
-        y, x = term.get_location()
-        print(term.move_xy(0, y - length - 1))
-        pos = 0
-    return pos
-
-def generatePKG(files : list, name : str, desc : str, term):
+def generatePKG(term, files : list, name : str, desc : str):
     print("Please select the main file")
     currentPos = 0
     length = 0
@@ -65,3 +51,26 @@ def generatePKG(files : list, name : str, desc : str, term):
     createCapsule(name)
     filepath = './{}/src'.format(name)
     # Write the files selected to the filepath
+
+
+def moveTermUp(pos, length, term):
+    if pos > 0:
+        pos -= 1
+        y, x = term.get_location()
+        print(term.move_xy(0, y - 2))
+    elif pos == 0:
+        y, x = term.get_location()
+        print(term.move_xy(0, y + length - 2))
+        pos = length
+    return pos
+
+def moveTermDown(pos, length, term):
+    if pos < length:
+        pos += 1
+        y, x = term.get_location()
+        print(term.move_xy(0, y))
+    elif pos == length:
+        y, x = term.get_location()
+        print(term.move_xy(0, y - length - 1))
+        pos = 0
+    return pos
