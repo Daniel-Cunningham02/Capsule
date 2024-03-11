@@ -10,3 +10,5 @@ def createCapsule(name):
         os.mkdir(path)
         os.system("cd {}".format(path))
         os.system("zig init-exe")
+        os.system("mv ./src/ ./{}/".format(name))
+        os.system("mv ./build.zig ./{}/".format(name))

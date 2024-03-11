@@ -24,6 +24,11 @@ def getJSON(files : list, name : str, desc : str):
     string = makeJSON(metadata)
     return string
 
+def removeFile(files : list, file):
+    for i in range(len(files)):
+        if files[i] == file:
+            return (files[:i] + files[i + 1:])
+
 def generatePKG(term, files : list, name : str, desc : str):
     print("Please select the main file")
     currentPos = 0
@@ -41,6 +46,7 @@ def generatePKG(term, files : list, name : str, desc : str):
     while inp != 'q':
         if inp.name == u'KEY_ENTER':
             mainFile = zigFiles[currentPos - 1]
+            files = removeFile(files, mainFile)
             break
         elif inp.name == u'KEY_UP':
             currentPos = moveTermUp(currentPos, length, term)
@@ -51,8 +57,10 @@ def generatePKG(term, files : list, name : str, desc : str):
     createCapsule(name)
     filepath = './{}/src'.format(name)
     # Write the files selected to the filepath
-
-
+    os.system("mv {} {}/main.zig".format((mainFile.filepath + mainFile.filename), filepath))
+    for i in files:
+        os.system("mv {} {}/".format(i.filepath + i.filename, filepath))
+    exit(0)
 def moveTermUp(pos, length, term):
     if pos > 0:
         pos -= 1

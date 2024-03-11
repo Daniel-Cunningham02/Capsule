@@ -46,7 +46,8 @@ def getPKGDescriptors():
 
 def init(interface: InitInterface):
     name, desc = getPKGDescriptors()
-    with interface.term.cbreak():
+    with interface.term.cbreak(), interface.term.fullscreen():
+        print(interface.term.move_xy(0,0))
         startY, startX = interface.term.get_location()
         interface.walk("./")
         interface.display(startX, startY)
