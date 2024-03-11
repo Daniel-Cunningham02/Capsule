@@ -1,17 +1,34 @@
 const std = @import("std");
 const messages = @import("./messages.zig");
 const settings = @import("./settings.zig");
+const FlagsI = @import("./flags.zig");
 const types = @import("./types.zig");
-const util = @import("./utility.zig");
 const http = std.http;
 const print = std.debug.print;
+const Allocator = std.mem.Allocator;
+const Dir = std.fs.Dir;
+
+const bufferHolder = struct {
+    buffer: std.ArrayList(u8),
+    size: usize,
+
+    fn deinit(self: *bufferHolder) void {
+        self.buffer.deinit();
+    }
+
+    fn getContents(self: *bufferHolder) ![]u8 {
+        return self.buffer.items[0..self.size];
+    }
+};
 
 pub fn handle_get(args: *const [][:0]u8) !void {
     const dash: u8 = '-';
+    var flagbundle: FlagsI.flags_bundle = undefined;
     if (args.len > 2) {
         const slice: u8 = args.*[2][0];
         if (slice == dash) {
-            try util.handle_flags(args);
+            flagbundle = try FlagsI.handle_flags(args);
+            try execCommands(args, flagbundle.counter, flagbundle.flags, flagbundle.ofp);
             return;
         }
         try download_src(&args.*[2], false, undefined, false);
@@ -20,7 +37,7 @@ pub fn handle_get(args: *const [][:0]u8) !void {
     }
 }
 
-pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: types.general_flags, ofp: types.output_flag_param) !void {
+pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: FlagsI.general_flags, ofp: FlagsI.output_flag_param) !void {
     if (flags.dll == true and flags.lib == false) {
         try download_dll(&args.*[counter], flags.verbose, ofp, flags.hidden);
     } else if (flags.dll == false and flags.lib == true) {
@@ -33,28 +50,36 @@ pub fn execCommands(args: *const [][:0]u8, counter: u32, flags: types.general_fl
     }
 }
 
-fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
-    var mallocator = std.heap.page_allocator;
-    print("{} {} {}\n", .{ verbose, ofp, hidden });
-
-    var client: http.Client = .{ .allocator = mallocator };
-    const path = try std.fmt.allocPrint(mallocator, "{s}/src/{s}", .{ settings.address, package.* });
-    defer mallocator.free(path);
-    const uri = try std.Uri.parse(path);
-    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
+// Struct {buffer, size}
+fn sendRequest(requestPath: []u8, allocator: *Allocator) !bufferHolder {
+    const deref_alloc = allocator.*;
+    var client: http.Client = .{ .allocator = deref_alloc };
+    const uri = try std.Uri.parse(requestPath);
+    var req = try client.request(.GET, uri, .{ .allocator = deref_alloc }, .{});
     defer req.deinit();
     try req.start();
     try req.wait();
 
-    // Reading response to buffer and writing to file
-    var buffer = std.ArrayList(u8).init(mallocator);
-    defer buffer.deinit();
+    var buffer = std.ArrayList(u8).init(deref_alloc);
     try buffer.resize(1000000);
     var readSize = try req.read(buffer.items);
-    var parsed_dir = try std.json.parseFromSlice(types.dir, mallocator, buffer.items[0..readSize], .{});
+    return bufferHolder{ .buffer = buffer, .size = readSize };
+}
 
-    var decoder = std.base64.Base64Decoder.init(std.fs.base64_alphabet, '=');
-    var decoded_buffer = std.ArrayList(u8).init(mallocator);
+fn download_src(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
+    var allocator = std.heap.page_allocator;
+    print("{} {} {}\n", .{ verbose, ofp, hidden });
+
+    const path = try std.fmt.allocPrint(allocator, "{s}/src/{s}", .{ settings.address, package.* });
+    defer allocator.free(path);
+
+    var bufStruct = try sendRequest(path, &allocator);
+    defer bufStruct.deinit();
+    const contents = try bufStruct.getContents();
+    var parsed_dir = try std.json.parseFromSlice(types.dir, allocator, contents, .{});
+
+    const decoder = std.base64.Base64Decoder.init(std.fs.base64_alphabet, '=');
+    var decoded_buffer = std.ArrayList(u8).init(allocator);
     defer decoded_buffer.deinit();
 
     try std.fs.cwd().makeDir(package.*);
@@ -63,66 +88,45 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, h
         try decoded_buffer.resize(try decoder.calcSizeForSlice(string));
         try decoder.decode(decoded_buffer.items, string);
         var name = parsed_dir.value.filenames[i];
-        var file = try dir.createFile(try std.fmt.allocPrint(mallocator, "./{s}", .{name}), std.fs.File.CreateFlags{});
-        _ = try file.write(decoded_buffer.items);
-        file.close();
+        try writeToFile(dir, &decoded_buffer.items, try std.fmt.allocPrint(allocator, "./{s}", .{name}));
         decoded_buffer.clearAndFree();
     }
     dir.close();
     return;
 }
 
-fn download_lib(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+fn download_lib(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
     // Making Allocator
-    var mallocator = std.heap.page_allocator;
+    var allocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
 
-    // Making client
-    var client: http.Client = .{ .allocator = mallocator };
-
-    //creating path and Uri
-    const path = try std.fmt.allocPrint(mallocator, "{s}/lib/{s}", .{ settings.address, package.* });
-    const uri = try std.Uri.parse(path);
-    defer mallocator.free(path);
-
+    //creating path
+    const path = try std.fmt.allocPrint(allocator, "{s}/lib/{s}", .{ settings.address, package.* });
     // Creating and sending request
-    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
-    defer req.deinit();
-    try req.start();
-    try req.wait();
+    var bufStruct = try sendRequest(path, &allocator);
+    defer bufStruct.deinit();
 
-    // Reading response to buffer and writing to file
-    var buffer = std.ArrayList(u8).init(mallocator);
-    try buffer.resize(100000);
-    var readSize = try req.read(buffer.items);
-    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.lib", .{package.*}), std.fs.File.CreateFlags{});
-    _ = try file.write(buffer.items[0..readSize]);
+    const contents = try bufStruct.getContents();
+    try writeToFile(std.fs.cwd(), &contents, try std.fmt.allocPrint(allocator, "./{s}.lib", .{package.ptr}));
     return;
 }
 
-fn download_dll(package: *[:0]u8, verbose: bool, ofp: types.output_flag_param, hidden: bool) !void {
+fn download_dll(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, hidden: bool) !void {
     // Making Allocator
-    var mallocator = std.heap.page_allocator;
+    var allocator = std.heap.page_allocator;
     print("{} {} {}\n", .{ verbose, ofp, hidden });
 
-    // Making client
-    var client: http.Client = .{ .allocator = mallocator };
-
     //creating path and Uri
-    const path = try std.fmt.allocPrint(mallocator, "{s}/dll/{s}", .{ settings.address, package.* });
-    const uri = try std.Uri.parse(path);
-    defer mallocator.free(path);
+    const path = try std.fmt.allocPrint(allocator, "{s}/dll/{s}", .{ settings.address, package.* });
+    var bufStruct = try sendRequest(path, &allocator);
+    const contents = try bufStruct.getContents();
 
-    // Creating and sending request
-    var req = try client.request(.GET, uri, .{ .allocator = mallocator }, .{});
-    defer req.deinit();
-    try req.start();
-    try req.wait();
-
-    var buffer = std.ArrayList(u8).init(mallocator);
-    try buffer.resize(100000);
-    var readSize = try req.read(buffer.items);
-    var file = try std.fs.cwd().createFile(try std.fmt.allocPrint(mallocator, "./{s}.dll", .{package.*}), std.fs.File.CreateFlags{});
-    _ = try file.write(buffer.items[0..readSize]);
+    try writeToFile(std.fs.cwd(), &contents, try std.fmt.allocPrint(allocator, "./{s}.dll", .{package.ptr}));
     return;
+}
+
+fn writeToFile(dir: Dir, str: *const []u8, file_name: []u8) !void {
+    var file = try dir.createFile(file_name, std.fs.File.CreateFlags{});
+    _ = try file.write(str.*);
+    file.close();
 }
