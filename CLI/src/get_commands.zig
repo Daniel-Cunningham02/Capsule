@@ -89,9 +89,6 @@ fn download_src(package: *[:0]u8, verbose: bool, ofp: FlagsI.output_flag_param, 
         try decoder.decode(decoded_buffer.items, string);
         var name = parsed_dir.value.filenames[i];
         try writeToFile(dir, &decoded_buffer.items, try std.fmt.allocPrint(allocator, "./{s}", .{name}));
-        // var file = try dir.createFile(try std.fmt.allocPrint(allocator, "./{s}", .{name}), std.fs.File.CreateFlags{});
-        // _ = try file.write(decoded_buffer.items);
-        // file.close();
         decoded_buffer.clearAndFree();
     }
     dir.close();

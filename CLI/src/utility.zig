@@ -1,7 +1,8 @@
 const std = @import("std");
-const FlagsI = @import("./flags.zig");
-const c = @import("./creation.zig");
-const get = @import("./get_commands.zig");
+
+pub inline fn print(format: []const u8, args: anytype) void {
+    std.io.getStdOut().writer().print(format, args) catch unreachable;
+}
 
 pub fn readInputInto(src: []u8, dest: *[]u8, delimiter: u8) !void {
     var stdin = std.io.getStdIn().reader();
