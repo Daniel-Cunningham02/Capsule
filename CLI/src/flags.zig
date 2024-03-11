@@ -14,10 +14,7 @@ pub const general_flags = struct {
     lib: bool,
 };
 
-pub const flags_bundle = struct {
-    ofp: output_flag_param,
-    flags: general_flags,
-};
+pub const flags_bundle = struct { ofp: output_flag_param, flags: general_flags, counter: u32 };
 
 pub fn get_command_flags(flag_str: *[:0]u8) !general_flags {
     var slice = flag_str.*[1..flag_str.len :0];
@@ -49,7 +46,7 @@ pub fn handle_flags(args: *const [][:0]u8) !flags_bundle {
         ofp = output_flag_param{ .output = false, .output_file = undefined };
     }
 
-    return flags_bundle{ .ofp = ofp, .flags = flags };
+    return flags_bundle{ .ofp = ofp, .flags = flags, .counter = counter };
 }
 
 fn lower(char: u8) u8 {

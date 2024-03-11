@@ -1,6 +1,6 @@
 const std = @import("std");
 const messages = @import("./messages.zig");
-const FlagsI = @import("./FlagsI.zig");
+const FlagsI = @import("./flags.zig");
 const c = @import("./creation.zig");
 const get = @import("./get_commands.zig");
 const mem = std.mem;
